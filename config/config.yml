@@ -1,2 +1,8 @@
+ServerConfig:
+  Address: ":8080"
+  JWTSecret: "OCf7CyrgOfnXT1udxqOOVfC5QSBnkGau"
+  MasterPassword: "790ef5575164f1b219956b3d6e37934b1970271395606d19b988ab97418ce1d7"
 LoggerConfig:
   Level: "DEBUG"
+ReposConfig:
+  SQLite: "./data/sqlite.db"
