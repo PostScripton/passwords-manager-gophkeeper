@@ -1,33 +1,40 @@
 package commands
 
 import (
+	"context"
+	"github.com/PostScripton/passwords-manager-gophkeeper/internal/cli/services"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"passwords-manager-gophkeeper/internal/config"
 )
 
 var (
-	cfgFolder string
-	cfg       *config.Config
+	dependencies *Dependencies
 
 	rootCmd = &cobra.Command{
-		Use:   "pm",
+		Use:   "gophkeeper",
 		Short: "Passwords Manager GophKeeper",
 	}
 )
 
-func Execute() {
+type Dependencies struct {
+	Services *services.Services
+}
+
+func Execute(ctx context.Context, deps *Dependencies) {
+	dependencies = deps
+	rootCmd.SetContext(ctx)
+
 	if err := rootCmd.Execute(); err != nil {
-		log.Fatal().Err(err).Msg("Root command execution")
+		log.Debug().Err(err).Msg("Root command execution")
+		rootCmd.PrintErrln(err)
 	}
 }
 
-func init() {
-	cobra.OnInitialize(initConfig)
-
-	rootCmd.PersistentFlags().StringVarP(&cfgFolder, "config", "c", "./configs", "path to config folder")
+func unauthorized(cmd *cobra.Command) {
+	cmd.PrintErrln("You are not authorized in order to perform this action")
 }
 
-func initConfig() {
-	cfg = config.NewConfig(cfgFolder)
+func authError(cmd *cobra.Command, err error) {
+	log.Error().Err(err).Msg("Checking whether authorized user")
+	cmd.PrintErrln("Error happened on checking authorization")
 }

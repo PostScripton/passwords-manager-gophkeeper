@@ -6,12 +6,23 @@ import (
 )
 
 type Config struct {
+	ServerConfig
 	LoggerConfig
+	ReposConfig
+}
+
+type ServerConfig struct {
+	Address        string
+	JWTSecret      string
+	MasterPassword string
 }
 
 type LoggerConfig struct {
-	Level           string
-	BeautifulOutput bool
+	Level string
+}
+
+type ReposConfig struct {
+	SQLite string
 }
 
 func NewConfig(configFolder string) *Config {
@@ -27,7 +38,6 @@ func NewConfig(configFolder string) *Config {
 	if err := viper.Unmarshal(&config); err != nil {
 		log.Fatal().Err(err).Msg("Unmarshalling config")
 	}
-	log.Info().Interface("config", config).Send()
 
 	return &config
 }
