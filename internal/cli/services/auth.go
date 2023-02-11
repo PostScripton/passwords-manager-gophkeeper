@@ -42,6 +42,23 @@ func (s *AuthService) CheckAuthorized(ctx context.Context) (bool, error) {
 	return true, nil
 }
 
+func (s *AuthService) GetID(ctx context.Context) (int, error) {
+	tokenString, _, err := s.settingsRepo.Get(ctx, "jwt")
+	if err != nil {
+		return 0, fmt.Errorf("getting JWT from setting: %w", err)
+	}
+
+	token, err := s.parseJWT(tokenString)
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		id := claims["sub"].(float64)
+
+		return int(id), nil
+	} else {
+		return 0, fmt.Errorf("invalid jwt token")
+	}
+}
+
 func (s *AuthService) parseJWT(tokenString string) (*jwt.Token, error) {
 	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {

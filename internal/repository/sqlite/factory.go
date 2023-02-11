@@ -21,3 +21,7 @@ func (f *Factory) CreateUserRepository() repository.Users {
 func (f *Factory) CreateSettingsRepository() repository.Settings {
 	return NewSettingsRepository(f.db)
 }
+
+func (f *Factory) CreateCredsSecretsRepository() repository.CredsSecrets {
+	return NewCredsSecretsRepository(f.db)
+}

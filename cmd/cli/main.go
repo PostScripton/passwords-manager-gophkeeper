@@ -29,9 +29,9 @@ func main() {
 
 	ctx := context.Background()
 
-	log.Info().Msg(fmt.Sprintf("Build version: %s", buildVersion))
-	log.Info().Msg(fmt.Sprintf("Build date: %s", buildTime))
-	log.Info().Msg(fmt.Sprintf("Build commit: %s\n", buildCommit))
+	fmt.Printf("Build version: %s\n", buildVersion)
+	fmt.Printf("Build date: %s\n", buildTime)
+	fmt.Printf("Build commit: %s\n\n", buildCommit)
 
 	cfg := config.NewConfig("./config")
 

@@ -16,6 +16,9 @@ var logoutCmd = &cobra.Command{
 		authorized, err := dependencies.Services.Auth.CheckAuthorized(cmd.Context())
 		if err != nil {
 			authError(cmd, err)
+			if err := dependencies.Services.User.Delete(cmd.Context()); err != nil {
+				log.Error().Err(err).Msg("Deleting user info")
+			}
 			return
 		}
 		if !authorized {

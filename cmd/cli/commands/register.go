@@ -20,9 +20,12 @@ var registerCmd = &cobra.Command{
 		authorized, err := dependencies.Services.Auth.CheckAuthorized(cmd.Context())
 		if err != nil {
 			authError(cmd, err)
+			if err := dependencies.Services.User.Delete(cmd.Context()); err != nil {
+				log.Error().Err(err).Msg("Deleting user info")
+			}
 			return
 		}
-		if authorized || errors.Is(err, services.ErrLoggedInAlready) {
+		if authorized {
 			cmd.PrintErrln("You are already logged into the system. " +
 				"If you want to register a new user then logout first.")
 			return
