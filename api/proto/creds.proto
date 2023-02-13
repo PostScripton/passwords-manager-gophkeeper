@@ -6,11 +6,12 @@ option go_package = "github.com/PostScripton/passwords-manager-gophkeeper/api/pr
 
 message SingleCreds {
   int64 id = 1;
-  string website = 2;
-  string login = 3;
-  string encPassword = 4;
-  string additional_data = 5;
-  int64 user_id = 6;
+  int64 uid = 2;
+  string website = 3;
+  string login = 4;
+  string encPassword = 5;
+  string additional_data = 6;
+  int64 user_id = 7;
 }
 
 message GetAllCredsRequest {}

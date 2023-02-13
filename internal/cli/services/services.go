@@ -26,8 +26,8 @@ type SecureKeys interface {
 
 type CredsSecret interface {
 	Add(ctx context.Context, userID int, website, login, password, additionalData string) error
-	Get(ctx context.Context, id int64) (*models.CredsSecret, error)
-	Delete(ctx context.Context, id int64) error
+	Get(ctx context.Context, uid int64) (*models.CredsSecret, error)
+	Delete(ctx context.Context, uid int64) error
 	GetList(ctx context.Context, userID int) ([]*models.CredsSecret, error)
 }
 

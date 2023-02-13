@@ -15,9 +15,9 @@ func init() {
 
 var getCredsCmd = &cobra.Command{
 	Use:       "get-creds",
-	Short:     "get a specific credentials using ID",
+	Short:     "get a specific credentials using UID",
 	Args:      cobra.MinimumNArgs(1),
-	ValidArgs: []string{"id"},
+	ValidArgs: []string{"uid"},
 	Example:   `get-creds 1234`,
 	Run: func(cmd *cobra.Command, args []string) {
 		authorized, err := dependencies.Services.Auth.CheckAuthorized(cmd.Context())
@@ -33,17 +33,17 @@ var getCredsCmd = &cobra.Command{
 			return
 		}
 
-		idString := args[0]
+		uidString := args[0]
 
-		id, err := strconv.Atoi(idString)
+		uid, err := strconv.Atoi(uidString)
 		if err != nil {
-			cmd.PrintErrf("Unable to convert [%s] to integer", idString)
+			cmd.PrintErrf("Unable to convert [%s] to integer", uidString)
 			return
 		}
 
 		syncCreds(cmd)
 
-		secret, err := dependencies.Services.CredsSecret.Get(cmd.Context(), int64(id))
+		secret, err := dependencies.Services.CredsSecret.Get(cmd.Context(), int64(uid))
 		if err != nil {
 			log.Error().Err(err).Msg("Getting creds from command")
 			return
@@ -62,7 +62,7 @@ func displayCredsSecret(cmd *cobra.Command, secret *models.CredsSecret) {
 	line := strings.Repeat("-", 10)
 	cmd.Println(fmt.Sprintf("%s %s %s", line, "Credentials", line))
 
-	cmd.Printf("ID: %d\n", secret.ID)
+	cmd.Printf("UID: %d\n", secret.UID)
 	cmd.Printf("Website: %s\n", secret.Website)
 	cmd.Printf("Login: %s\n", secret.Login)
 	cmd.Printf("Password: %s\n", secret.Password)

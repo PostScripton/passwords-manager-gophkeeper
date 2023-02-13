@@ -5,6 +5,7 @@ import (
 	pb "github.com/PostScripton/passwords-manager-gophkeeper/api/proto"
 	"github.com/PostScripton/passwords-manager-gophkeeper/internal/models"
 	"github.com/PostScripton/passwords-manager-gophkeeper/internal/services"
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -35,6 +36,7 @@ func (c *CredsServer) GetAllCreds(ctx context.Context, _ *pb.GetAllCredsRequest)
 
 	list, err := c.services.Creds.GetList(ctx, userID)
 	if err != nil {
+		log.Error().Err(err).Msg("Getting credentials list for the user")
 		return nil, status.Errorf(codes.Unknown, "Getting credentials list for the user")
 	}
 
@@ -43,6 +45,7 @@ func (c *CredsServer) GetAllCreds(ctx context.Context, _ *pb.GetAllCredsRequest)
 	for _, secret := range list {
 		out = append(out, &pb.SingleCreds{
 			Id:             secret.ID,
+			Uid:            secret.UID,
 			Website:        secret.Website,
 			Login:          secret.Login,
 			EncPassword:    secret.Password,
@@ -65,6 +68,7 @@ func (c *CredsServer) SetAllCreds(
 	for _, secret := range in.AllCreds {
 		list = append(list, models.CredsSecret{
 			ID:             secret.Id,
+			UID:            secret.Uid,
 			Website:        secret.Website,
 			Login:          secret.Login,
 			Password:       secret.EncPassword,
@@ -74,6 +78,7 @@ func (c *CredsServer) SetAllCreds(
 	}
 
 	if err := c.services.Creds.SetList(ctx, list); err != nil {
+		log.Error().Err(err).Msg("Setting credentials list for the user")
 		return nil, status.Errorf(codes.Unknown, "Setting credentials list for the user")
 	}
 

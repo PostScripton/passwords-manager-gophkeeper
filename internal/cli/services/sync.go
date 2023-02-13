@@ -71,6 +71,7 @@ func (s *SyncService) getRemoteCreds(remoteList []*pb.SingleCreds) []models.Cred
 	for _, secret := range remoteList {
 		result = append(result, models.CredsSecret{
 			ID:             secret.Id,
+			UID:            secret.Uid,
 			Website:        secret.Website,
 			Login:          secret.Login,
 			Password:       secret.EncPassword,
@@ -88,6 +89,7 @@ func (s *SyncService) getLocalCreds(localList []*models.CredsSecret) []*pb.Singl
 	for _, secret := range localList {
 		result = append(result, &pb.SingleCreds{
 			Id:             secret.ID,
+			Uid:            secret.UID,
 			Website:        secret.Website,
 			Login:          secret.Login,
 			EncPassword:    secret.Password,
