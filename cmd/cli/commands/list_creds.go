@@ -58,6 +58,6 @@ func displayAllCredsSecrets(cmd *cobra.Command, secrets []*models.CredsSecret) {
 			cmd.Printf("\nWebsite: %s\n", website)
 		}
 
-		cmd.Printf("-- ID: [%d], Login: [%s]\n", secret.ID, secret.Login)
+		cmd.Printf("-- UID: [%d], Login: [%s]\n", secret.UID, secret.Login)
 	}
 }

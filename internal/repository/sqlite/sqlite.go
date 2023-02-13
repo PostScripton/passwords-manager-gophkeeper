@@ -72,7 +72,7 @@ func (s *SQLite) createSettingsTable() error {
 
 func (s *SQLite) createUsersTable() error {
 	query := `CREATE TABLE IF NOT EXISTS users (
-		id          INTEGER PRIMARY KEY AUTOINCREMENT,
+		id          INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 		login       TEXT NOT NULL UNIQUE,
 		password    TEXT NOT NULL,
 		aes_secret  TEXT NOT NULL,
@@ -87,13 +87,16 @@ func (s *SQLite) createUsersTable() error {
 
 func (s *SQLite) createCredsSecretsTable() error {
 	query := `CREATE TABLE IF NOT EXISTS creds_secrets (
-		id              INTEGER PRIMARY KEY AUTOINCREMENT,
+		id              INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+		uid		        INTEGER NOT NULL,
 		website         TEXT NOT NULL,
 		login           TEXT NOT NULL,
 		enc_password    TEXT NOT NULL,
 		additional_data TEXT NOT NULL,
-		user_id			TEXT NOT NULL,
-		UNIQUE (website, login, user_id)
+		user_id			INTEGER NOT NULL,
+		UNIQUE (uid),
+		UNIQUE (website, login, user_id),
+		FOREIGN KEY (user_id) REFERENCES users(id)
 	)`
 	if _, err := s.Exec(query); err != nil {
 		return err

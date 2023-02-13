@@ -8,6 +8,8 @@ import (
 	"github.com/PostScripton/passwords-manager-gophkeeper/internal/models"
 	"github.com/PostScripton/passwords-manager-gophkeeper/internal/repository"
 	"golang.org/x/sync/errgroup"
+	"math/rand"
+	"time"
 )
 
 type CredsSecretsRepository struct {
@@ -35,20 +37,23 @@ func (r *CredsSecretsRepository) Create(
 		return fmt.Errorf("credentials for this website exist")
 	}
 
-	query := `INSERT INTO creds_secrets (website, login, enc_password, additional_data, user_id) VALUES ($1, $2, $3, $4, $5);`
-	if _, err = r.db.ExecContext(ctx, query, website, login, encPassword, additionalData, userID); err != nil {
-		return fmt.Errorf("store creds secret to the database: %w", err)
+	rand.Seed(time.Now().UnixMicro())
+
+	query := `INSERT INTO creds_secrets (uid, website, login, enc_password, additional_data, user_id) VALUES ($1, $2, $3, $4, $5, $6);`
+	if _, err = r.db.ExecContext(ctx, query, rand.Int63(), website, login, encPassword, additionalData, userID); err != nil {
+		return fmt.Errorf("store creds secret to the SQLite database on create: %w", err)
 	}
 
 	return nil
 }
 
-func (r *CredsSecretsRepository) GetById(ctx context.Context, id int64) (*models.CredsSecret, error) {
-	query := `SELECT id, website, login, enc_password, additional_data, user_id FROM creds_secrets WHERE id = $1;`
+func (r *CredsSecretsRepository) GetById(ctx context.Context, uid int64) (*models.CredsSecret, error) {
+	query := `SELECT id, uid, website, login, enc_password, additional_data, user_id FROM creds_secrets WHERE uid = $1;`
 
 	creds := new(models.CredsSecret)
-	if err := r.db.QueryRowContext(ctx, query, id).Scan(
+	if err := r.db.QueryRowContext(ctx, query, uid).Scan(
 		&creds.ID,
+		&creds.UID,
 		&creds.Website,
 		&creds.Login,
 		&creds.Password,
@@ -65,10 +70,10 @@ func (r *CredsSecretsRepository) GetById(ctx context.Context, id int64) (*models
 	return creds, nil
 }
 
-func (r *CredsSecretsRepository) Delete(ctx context.Context, id int64) error {
-	query := `DELETE FROM creds_secrets WHERE id = $1;`
+func (r *CredsSecretsRepository) Delete(ctx context.Context, uid int64) error {
+	query := `DELETE FROM creds_secrets WHERE uid = $1;`
 
-	if _, err := r.db.ExecContext(ctx, query, id); err != nil {
+	if _, err := r.db.ExecContext(ctx, query, uid); err != nil {
 		return fmt.Errorf("deleting creds from SQLite: %w", err)
 	}
 
@@ -76,7 +81,7 @@ func (r *CredsSecretsRepository) Delete(ctx context.Context, id int64) error {
 }
 
 func (r *CredsSecretsRepository) GetList(ctx context.Context, userID int) ([]*models.CredsSecret, error) {
-	query := `SELECT id, website, login, enc_password, additional_data, user_id
+	query := `SELECT id, uid, website, login, enc_password, additional_data, user_id
 		FROM creds_secrets
 		WHERE user_id = $1
 		ORDER BY website, login;`
@@ -92,6 +97,7 @@ func (r *CredsSecretsRepository) GetList(ctx context.Context, userID int) ([]*mo
 		secret := new(models.CredsSecret)
 		if err = rows.Scan(
 			&secret.ID,
+			&secret.UID,
 			&secret.Website,
 			&secret.Login,
 			&secret.Password,
@@ -110,48 +116,35 @@ func (r *CredsSecretsRepository) GetList(ctx context.Context, userID int) ([]*mo
 func (r *CredsSecretsRepository) SetList(ctx context.Context, list []models.CredsSecret) error {
 	deleteGroup, deleteCtx := errgroup.WithContext(ctx)
 	for _, secret := range list {
+		// [Спринт 10: Примитивы синхронизации: Пакеты sync и x/sync]
+		// Делаем специально так, чтобы в горутину не попали последние значения цикла
+		uid := secret.UID
+
 		deleteGroup.Go(func() error {
-			return r.Delete(deleteCtx, secret.ID)
+			return r.Delete(deleteCtx, uid)
 		})
 	}
 	if err := deleteGroup.Wait(); err != nil {
 		return err
 	}
 
-	createGroup, createCtx := errgroup.WithContext(ctx)
 	for _, secret := range list {
-		createGroup.Go(func() error {
-			exists, err := r.checkCredsSecretExists(createCtx, secret.UserID, secret.Website, secret.Login)
-			if err != nil {
-				return err
-			}
-			if exists {
-				return fmt.Errorf("credentials for this website exist")
-			}
-
-			// Для того чтобы не автоинкрементил ID и не получались разные секреты
-			// (13 - 1... + 1 (auto-increment) = 13)
-			id := secret.ID - 1
-
-			query := `INSERT INTO creds_secrets (id, website, login, enc_password, additional_data, user_id) VALUES ($1, $2, $3, $4, $5, $6);`
-			if _, err = r.db.ExecContext(
-				createCtx,
-				query,
-				id,
-				secret.Website,
-				secret.Login,
-				secret.Password,
-				secret.AdditionalData,
-				secret.UserID,
-			); err != nil {
-				return fmt.Errorf("store creds secret to the database: %w", err)
-			}
-
-			return nil
-		})
+		query := `INSERT INTO creds_secrets (uid, website, login, enc_password, additional_data, user_id) VALUES ($1, $2, $3, $4, $5, $6);`
+		if _, err := r.db.ExecContext(
+			ctx,
+			query,
+			secret.UID,
+			secret.Website,
+			secret.Login,
+			secret.Password,
+			secret.AdditionalData,
+			secret.UserID,
+		); err != nil {
+			return fmt.Errorf("store creds secret to the SQLite database on set list: %w", err)
+		}
 	}
 
-	return createGroup.Wait()
+	return nil
 }
 
 func (r *CredsSecretsRepository) Truncate(ctx context.Context) error {
