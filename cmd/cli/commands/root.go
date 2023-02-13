@@ -38,3 +38,23 @@ func authError(cmd *cobra.Command, err error) {
 	log.Error().Err(err).Msg("Checking whether authorized user")
 	cmd.PrintErrln("Error happened on checking authorization")
 }
+
+func syncCreds(cmd *cobra.Command) {
+	cmd.Println("Syncing credentials from the server...")
+	if err := dependencies.Services.Sync.SyncCreds(cmd.Context()); err != nil {
+		log.Error().Err(err).Msg("Syncing creds from the server")
+		cmd.PrintErrln("Error happened on syncing credentials from the server")
+	} else {
+		cmd.Println("The credentials have been synced")
+	}
+}
+
+func uploadCreds(cmd *cobra.Command) {
+	cmd.Println("Uploading credentials from the server...")
+	if err := dependencies.Services.Sync.UploadCreds(cmd.Context()); err != nil {
+		log.Error().Err(err).Msg("Uploading creds to the server")
+		cmd.PrintErrln("Error happened on uploading credentials from the server")
+	} else {
+		cmd.Println("The credentials have been uploaded")
+	}
+}

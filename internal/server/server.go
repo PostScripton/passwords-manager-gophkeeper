@@ -2,6 +2,7 @@ package server
 
 import (
 	pb "github.com/PostScripton/passwords-manager-gophkeeper/api/proto"
+	"github.com/PostScripton/passwords-manager-gophkeeper/internal/interceptor"
 	servicesPkg "github.com/PostScripton/passwords-manager-gophkeeper/internal/services"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
@@ -19,8 +20,13 @@ func NewServer(address string, services *servicesPkg.Services) *Server {
 		log.Fatal().Err(err).Str("address", address).Msg("Listening to TCP address")
 	}
 
-	core := grpc.NewServer()
+	authInterceptor := interceptor.NewUnaryServerAuthInterceptor(services.Auth)
+
+	core := grpc.NewServer(grpc.UnaryInterceptor(authInterceptor.Handle()))
 	pb.RegisterUserServer(core, &UserServer{
+		services: services,
+	})
+	pb.RegisterCredsServer(core, &CredsServer{
 		services: services,
 	})
 

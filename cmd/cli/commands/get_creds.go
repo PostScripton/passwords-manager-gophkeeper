@@ -41,6 +41,8 @@ var getCredsCmd = &cobra.Command{
 			return
 		}
 
+		syncCreds(cmd)
+
 		secret, err := dependencies.Services.CredsSecret.Get(cmd.Context(), int64(id))
 		if err != nil {
 			log.Error().Err(err).Msg("Getting creds from command")

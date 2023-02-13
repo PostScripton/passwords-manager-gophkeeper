@@ -44,7 +44,14 @@ func main() {
 	repos := repository.NewRepository(factory)
 
 	userClient := client.NewUserClient(ctx, cfg.ServerConfig.Address)
-	services := servicesPkg.NewServices(userClient, repos, cfg.ServerConfig.JWTSecret, cfg.ServerConfig.MasterPassword)
+	credsClient := client.NewCredsClient(ctx, cfg.ServerConfig.Address, repos.Settings)
+	services := servicesPkg.NewServices(
+		userClient,
+		credsClient,
+		repos,
+		cfg.ServerConfig.JWTSecret,
+		cfg.ServerConfig.MasterPassword,
+	)
 
 	commands.Execute(ctx, &commands.Dependencies{
 		Services: services,

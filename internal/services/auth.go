@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/PostScripton/passwords-manager-gophkeeper/internal/models"
 	"github.com/PostScripton/passwords-manager-gophkeeper/internal/repository"
 	"github.com/golang-jwt/jwt/v4"
@@ -48,6 +49,25 @@ func (s *authService) Login(ctx context.Context, login, password string) (string
 	}
 
 	return s.generateJWT(user)
+}
+
+func (s *authService) ParseJWT(tokenString string) (*jwt.Token, error) {
+	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(s.secret), nil
+	})
+}
+
+func (s *authService) GetIDFromJWT(token *jwt.Token) (int, error) {
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		id := claims["sub"].(float64)
+
+		return int(id), nil
+	} else {
+		return 0, fmt.Errorf("invalid jwt token")
+	}
 }
 
 func (s *authService) generateJWT(user *models.User) (string, error) {

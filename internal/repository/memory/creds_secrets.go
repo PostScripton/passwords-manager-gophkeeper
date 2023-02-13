@@ -95,6 +95,27 @@ func (r *CredsSecretsRepository) GetList(_ context.Context, userID int) ([]*mode
 	return list, nil
 }
 
+func (r *CredsSecretsRepository) SetList(_ context.Context, list []models.CredsSecret) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	for _, secret := range list {
+		delete(r.storage, secret.ID)
+		r.storage[secret.ID] = secret
+	}
+
+	return nil
+}
+
+func (r *CredsSecretsRepository) Truncate(_ context.Context) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	r.storage = make(map[int64]models.CredsSecret)
+
+	return nil
+}
+
 func (r *CredsSecretsRepository) checkCredsSecretExists(userID int, website, login string) (bool, error) {
 	for _, secret := range r.storage {
 		if secret.UserID == userID && secret.Website == website && secret.Login == login {

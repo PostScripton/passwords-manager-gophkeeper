@@ -40,10 +40,14 @@ var addCredsCmd = &cobra.Command{
 			additionalData = args[3]
 		}
 
+		syncCreds(cmd)
+
 		if err := dependencies.Services.CredsSecret.Add(cmd.Context(), id, website, login, password, additionalData); err != nil {
 			log.Error().Err(err).Msg("Adding creds from command")
 			return
 		}
+
+		uploadCreds(cmd)
 
 		cmd.Printf("The credentials to the [%s] website have been added successfully!\n", website)
 	},
