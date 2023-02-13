@@ -22,7 +22,8 @@ type LoggerConfig struct {
 }
 
 type ReposConfig struct {
-	SQLite string
+	SQLite   string
+	Postgres string
 }
 
 func NewConfig(configFolder string) *Config {

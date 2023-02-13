@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/PostScripton/passwords-manager-gophkeeper/internal/config"
 	"github.com/PostScripton/passwords-manager-gophkeeper/internal/repository"
-	"github.com/PostScripton/passwords-manager-gophkeeper/internal/repository/memory"
+	"github.com/PostScripton/passwords-manager-gophkeeper/internal/repository/postgres"
 	"github.com/PostScripton/passwords-manager-gophkeeper/internal/server"
 	servicesPkg "github.com/PostScripton/passwords-manager-gophkeeper/internal/services"
 	"github.com/rs/zerolog"
@@ -25,7 +25,12 @@ func main() {
 	cfg := config.NewConfig("./config")
 	log.Debug().Interface("config", cfg).Send()
 
-	factory := memory.NewFactory()
+	db, err := postgres.NewPostgres(ctx, cfg.ReposConfig.Postgres)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Connecting to the Postgres database")
+	}
+
+	factory := postgres.NewFactory(db)
 	repo := repository.NewRepository(factory)
 
 	services := servicesPkg.NewServices(repo, cfg.ServerConfig.JWTSecret)
@@ -42,7 +47,7 @@ func main() {
 		return coreServer.Shutdown()
 	})
 
-	if err := g.Wait(); err != nil {
+	if err = g.Wait(); err != nil {
 		log.Info().Err(err).Msg("Reason for graceful shutdown")
 	}
 

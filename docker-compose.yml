@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  db:
+    image: postgres:14
+    ports:
+      - "54321:5432"
+    restart: always
+    environment:
+      POSTGRES_DB: homestead
+      POSTGRES_USER: homestead
+      POSTGRES_PASSWORD: secret

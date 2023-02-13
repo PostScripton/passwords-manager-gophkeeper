@@ -6,3 +6,4 @@ LoggerConfig:
   Level: "DEBUG"
 ReposConfig:
   SQLite: "./data/sqlite.db"
+  Postgres: "postgres://homestead:secret@localhost:54321/homestead"
