@@ -25,6 +25,8 @@ type CredsSecrets interface {
 	GetById(ctx context.Context, id int64) (*models.CredsSecret, error)
 	Delete(ctx context.Context, id int64) error
 	GetList(ctx context.Context, userID int) ([]*models.CredsSecret, error)
+	SetList(ctx context.Context, list []models.CredsSecret) error
+	Truncate(ctx context.Context) error
 }
 
 type Repository struct {

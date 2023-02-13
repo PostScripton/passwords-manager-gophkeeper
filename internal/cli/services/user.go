@@ -13,16 +13,16 @@ var ErrLoggedInAlready = fmt.Errorf("the user is already logged in")
 var ErrCredentialsDontMatch = fmt.Errorf("the credentials don't match any of our records")
 
 type UserService struct {
-	client       pb.UserClient
-	settingsRepo repository.Settings
+	client pb.UserClient
+	repos  *repository.Repository
 }
 
 var _ User = (*UserService)(nil)
 
-func NewUserService(client pb.UserClient, settingsRepo repository.Settings) User {
+func NewUserService(client pb.UserClient, repos *repository.Repository) User {
 	return &UserService{
-		client:       client,
-		settingsRepo: settingsRepo,
+		client: client,
+		repos:  repos,
 	}
 }
 
@@ -73,7 +73,10 @@ func (s *UserService) Login(ctx context.Context, login, password string) error {
 }
 
 func (s *UserService) Delete(ctx context.Context) error {
-	if err := s.settingsRepo.Truncate(ctx); err != nil {
+	if err := s.repos.Settings.Truncate(ctx); err != nil {
+		return err
+	}
+	if err := s.repos.CredsSecrets.Truncate(ctx); err != nil {
 		return err
 	}
 
@@ -81,15 +84,15 @@ func (s *UserService) Delete(ctx context.Context) error {
 }
 
 func (s *UserService) rememberMe(ctx context.Context, jwt, aesSecret, privateKey string) error {
-	if _, err := s.settingsRepo.Set(ctx, "jwt", jwt); err != nil {
+	if _, err := s.repos.Settings.Set(ctx, "jwt", jwt); err != nil {
 		return err
 	}
 
-	if _, err := s.settingsRepo.Set(ctx, "aes_secret", aesSecret); err != nil {
+	if _, err := s.repos.Settings.Set(ctx, "aes_secret", aesSecret); err != nil {
 		return err
 	}
 
-	if _, err := s.settingsRepo.Set(ctx, "private_key", privateKey); err != nil {
+	if _, err := s.repos.Settings.Set(ctx, "private_key", privateKey); err != nil {
 		return err
 	}
 

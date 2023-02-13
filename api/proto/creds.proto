@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "github.com/PostScripton/passwords-manager-gophkeeper/api/proto";
+
+message SingleCreds {
+  int64 id = 1;
+  string website = 2;
+  string login = 3;
+  string encPassword = 4;
+  string additional_data = 5;
+  int64 user_id = 6;
+}
+
+message GetAllCredsRequest {}
+
+message GetAllCredsResponse {
+  repeated SingleCreds all_creds = 1;
+}
+
+message SetAllCredsRequest {
+  repeated SingleCreds all_creds = 1;
+}
+
+message SetAllCredsResponse {}
+
+service Creds {
+  rpc GetAllCreds(GetAllCredsRequest) returns (GetAllCredsResponse);
+  rpc SetAllCreds(SetAllCredsRequest) returns (SetAllCredsResponse);
+}

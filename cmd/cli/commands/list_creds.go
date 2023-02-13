@@ -34,6 +34,8 @@ var listCredsCmd = &cobra.Command{
 			return
 		}
 
+		syncCreds(cmd)
+
 		secrets, err := dependencies.Services.CredsSecret.GetList(cmd.Context(), id)
 		if err != nil {
 			log.Error().Err(err).Msg("Getting list of creds from command")
@@ -46,7 +48,7 @@ var listCredsCmd = &cobra.Command{
 
 func displayAllCredsSecrets(cmd *cobra.Command, secrets []*models.CredsSecret) {
 	line := strings.Repeat("-", 10)
-	cmd.Println(fmt.Sprintf("%s %s %s", line, "List of credentials", line))
+	cmd.Println(fmt.Sprintf("\n%s %s %s", line, "List of credentials", line))
 
 	var website string
 	for _, secret := range secrets {

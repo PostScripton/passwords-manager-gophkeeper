@@ -31,24 +31,33 @@ type CredsSecret interface {
 	GetList(ctx context.Context, userID int) ([]*models.CredsSecret, error)
 }
 
+type Sync interface {
+	SyncCreds(ctx context.Context) error
+	UploadCreds(ctx context.Context) error
+}
+
 type Services struct {
 	User
 	Auth
 	SecureKeys
 	CredsSecret
+	Sync
 }
 
 func NewServices(
 	userClient pb.UserClient,
+	credsClient pb.CredsClient,
 	repos *repository.Repository,
 	jwtSecret, masterPassword string,
 ) *Services {
 	secureKeysService := NewSecureKeysService(masterPassword, repos.Settings)
+	authService := NewAuthService(jwtSecret, repos.Settings)
 
 	return &Services{
-		User:        NewUserService(userClient, repos.Settings),
-		Auth:        NewAuthService(jwtSecret, repos.Settings),
+		User:        NewUserService(userClient, repos),
+		Auth:        authService,
 		SecureKeys:  secureKeysService,
 		CredsSecret: NewCredsSecretService(repos.Settings, repos.CredsSecrets, secureKeysService),
+		Sync:        NewSyncService(credsClient, repos.CredsSecrets, authService),
 	}
 }

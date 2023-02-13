@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/PostScripton/passwords-manager-gophkeeper/internal/models"
 	"github.com/PostScripton/passwords-manager-gophkeeper/internal/repository"
+	"golang.org/x/sync/errgroup"
 )
 
 type CredsSecretsRepository struct {
@@ -104,6 +105,63 @@ func (r *CredsSecretsRepository) GetList(ctx context.Context, userID int) ([]*mo
 	}
 
 	return list, nil
+}
+
+func (r *CredsSecretsRepository) SetList(ctx context.Context, list []models.CredsSecret) error {
+	deleteGroup, deleteCtx := errgroup.WithContext(ctx)
+	for _, secret := range list {
+		deleteGroup.Go(func() error {
+			return r.Delete(deleteCtx, secret.ID)
+		})
+	}
+	if err := deleteGroup.Wait(); err != nil {
+		return err
+	}
+
+	createGroup, createCtx := errgroup.WithContext(ctx)
+	for _, secret := range list {
+		createGroup.Go(func() error {
+			exists, err := r.checkCredsSecretExists(createCtx, secret.UserID, secret.Website, secret.Login)
+			if err != nil {
+				return err
+			}
+			if exists {
+				return fmt.Errorf("credentials for this website exist")
+			}
+
+			// Для того чтобы не автоинкрементил ID и не получались разные секреты
+			// (13 - 1... + 1 (auto-increment) = 13)
+			id := secret.ID - 1
+
+			query := `INSERT INTO creds_secrets (id, website, login, enc_password, additional_data, user_id) VALUES ($1, $2, $3, $4, $5, $6);`
+			if _, err = r.db.ExecContext(
+				createCtx,
+				query,
+				id,
+				secret.Website,
+				secret.Login,
+				secret.Password,
+				secret.AdditionalData,
+				secret.UserID,
+			); err != nil {
+				return fmt.Errorf("store creds secret to the database: %w", err)
+			}
+
+			return nil
+		})
+	}
+
+	return createGroup.Wait()
+}
+
+func (r *CredsSecretsRepository) Truncate(ctx context.Context) error {
+	query := `DELETE FROM creds_secrets;`
+
+	if _, err := r.db.ExecContext(ctx, query); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *CredsSecretsRepository) checkCredsSecretExists(

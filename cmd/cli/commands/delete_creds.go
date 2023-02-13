@@ -38,10 +38,14 @@ var deleteCredsCmd = &cobra.Command{
 			return
 		}
 
+		syncCreds(cmd)
+
 		if err := dependencies.Services.CredsSecret.Delete(cmd.Context(), int64(id)); err != nil {
 			log.Error().Err(err).Msg("Deleting creds from command")
 			return
 		}
+
+		uploadCreds(cmd)
 
 		cmd.Println("The credentials have been deleted successfully!")
 	},
