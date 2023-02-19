@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/PostScripton/passwords-manager-gophkeeper/cmd/cli/commands"
+	"github.com/PostScripton/passwords-manager-gophkeeper/internal/cli/commands"
 	servicesPkg "github.com/PostScripton/passwords-manager-gophkeeper/internal/cli/services"
 	"github.com/PostScripton/passwords-manager-gophkeeper/internal/client"
 	"github.com/PostScripton/passwords-manager-gophkeeper/internal/config"
