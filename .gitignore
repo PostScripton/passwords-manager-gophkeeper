@@ -1,3 +1,7 @@
 .idea
 bin
+cert
 data
+
+!cert/domains.ext
+!cert/gen.sh

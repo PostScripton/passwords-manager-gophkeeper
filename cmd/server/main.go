@@ -31,11 +31,16 @@ func main() {
 	}
 
 	factory := postgres.NewFactory(db)
-	repo := repository.NewRepository(factory)
+	repos := repository.NewRepository(factory)
 
-	services := servicesPkg.NewServices(repo, cfg.ServerConfig.JWTSecret)
+	services := servicesPkg.NewServices(repos, cfg.ServerConfig.JWTSecret)
 
-	coreServer := server.NewServer(cfg.ServerConfig.Address, services)
+	coreServer := server.NewServer(
+		cfg.ServerConfig.Address,
+		services,
+		cfg.ServerConfig.SSLCertPath,
+		cfg.ServerConfig.SSLKeyPath,
+	)
 
 	g, gCtx := errgroup.WithContext(ctx)
 	g.Go(func() error {

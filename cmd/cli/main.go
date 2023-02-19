@@ -43,8 +43,19 @@ func main() {
 	factory := sqlite.NewFactory(db)
 	repos := repository.NewRepository(factory)
 
-	userClient := client.NewUserClient(ctx, cfg.ServerConfig.Address)
-	credsClient := client.NewCredsClient(ctx, cfg.ServerConfig.Address, repos.Settings)
+	userClient := client.NewUserClient(
+		ctx,
+		cfg.ServerConfig.Address,
+		cfg.ServerConfig.SSLCertPath,
+		cfg.ServerConfig.SSLKeyPath,
+	)
+	credsClient := client.NewCredsClient(
+		ctx,
+		cfg.ServerConfig.Address,
+		repos.Settings,
+		cfg.ServerConfig.SSLCertPath,
+		cfg.ServerConfig.SSLKeyPath,
+	)
 	services := servicesPkg.NewServices(
 		userClient,
 		credsClient,
