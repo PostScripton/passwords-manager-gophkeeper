@@ -89,7 +89,7 @@ func (r *CredsSecretsRepository) GetList(ctx context.Context, userID int) ([]*mo
 
 	rows, err := r.db.Query(ctx, query, userID)
 	if err != nil {
-		log.Debug().Err(err).Msg("Postgres: get list")
+		log.Debug().Int("user-id", userID).Err(err).Msg("Postgres: get list")
 		return nil, err
 	}
 

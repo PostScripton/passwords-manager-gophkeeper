@@ -33,7 +33,7 @@ func (u *UserServer) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.
 
 	token, err := u.services.Auth.LoginByUser(user)
 	if err != nil {
-		log.Error().Err(err).Msg("Authorizing user")
+		log.Error().Err(err).Int("user-id", user.ID).Msg("Authorizing user")
 		return nil, errInternalServerError
 	}
 
