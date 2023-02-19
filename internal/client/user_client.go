@@ -11,7 +11,11 @@ import (
 func NewUserClient(ctx context.Context, address string, sslCertPath, sslKeyPath string) pb.UserClient {
 	tlsCredential, err := cert.LoadClientCertificate(sslCertPath, sslKeyPath)
 	if err != nil {
-		log.Fatal().Err(err).Msg("Loading client TLS cert")
+		log.Fatal().
+			Err(err).
+			Str("cert-path", sslCertPath).
+			Str("key-path", sslKeyPath).
+			Msg("Loading client TLS cert")
 	}
 
 	conn, err := grpc.Dial(address, grpc.WithTransportCredentials(tlsCredential))
@@ -22,7 +26,7 @@ func NewUserClient(ctx context.Context, address string, sslCertPath, sslKeyPath 
 	go func() {
 		<-ctx.Done()
 		if err = conn.Close(); err != nil {
-			log.Fatal().Err(err).Msg("Closing gRPC connection")
+			log.Fatal().Err(err).Str("context-error", ctx.Err().Error()).Msg("Closing gRPC connection")
 		}
 	}()
 

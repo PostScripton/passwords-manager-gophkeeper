@@ -34,7 +34,7 @@ func NewConfig(configFolder string) *Config {
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {
-		log.Fatal().Err(err).Msg("Reading in config")
+		log.Fatal().Err(err).Str("folder", configFolder).Msg("Reading in config")
 	}
 
 	var config Config

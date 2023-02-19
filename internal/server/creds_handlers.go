@@ -36,7 +36,7 @@ func (c *CredsServer) GetAllCreds(ctx context.Context, _ *pb.GetAllCredsRequest)
 
 	list, err := c.services.Creds.GetList(ctx, userID)
 	if err != nil {
-		log.Error().Err(err).Msg("Getting credentials list for the user")
+		log.Error().Err(err).Int("user-id", userID).Msg("Getting credentials list for the user")
 		return nil, status.Errorf(codes.Unknown, "Getting credentials list for the user")
 	}
 
