@@ -15,6 +15,8 @@ type ServerConfig struct {
 	Address        string
 	JWTSecret      string
 	MasterPassword string
+	SSLCertPath    string
+	SSLKeyPath     string
 }
 
 type LoggerConfig struct {

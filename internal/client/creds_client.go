@@ -5,17 +5,27 @@ import (
 	pb "github.com/PostScripton/passwords-manager-gophkeeper/api/proto"
 	"github.com/PostScripton/passwords-manager-gophkeeper/internal/interceptor"
 	"github.com/PostScripton/passwords-manager-gophkeeper/internal/repository"
+	"github.com/PostScripton/passwords-manager-gophkeeper/pkg/cert"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
-func NewCredsClient(ctx context.Context, address string, settingsRepo repository.Settings) pb.CredsClient {
+func NewCredsClient(
+	ctx context.Context,
+	address string,
+	settingsRepo repository.Settings,
+	sslCertPath, sslKeyPath string,
+) pb.CredsClient {
+	tlsCredential, err := cert.LoadClientCertificate(sslCertPath, sslKeyPath)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Loading client TLS cert")
+	}
+
 	authInterceptor := interceptor.NewUnaryClientAuthInterceptor(settingsRepo)
 
 	conn, err := grpc.Dial(
 		address,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithTransportCredentials(tlsCredential),
 		grpc.WithUnaryInterceptor(authInterceptor.Handle()),
 	)
 	if err != nil {
