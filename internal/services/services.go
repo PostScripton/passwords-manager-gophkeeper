@@ -13,11 +13,11 @@ type User interface {
 }
 
 type Auth interface {
-	GetSecret() string
-	LoginByUser(user *models.User) (string, error)
 	Login(ctx context.Context, login, password string) (string, error)
+	GenerateJWT(user *models.User) (string, error)
 	ParseJWT(tokenString string) (*jwt.Token, error)
 	GetIDFromJWT(token *jwt.Token) (int, error)
+	HashPassword(password string) (string, error)
 }
 
 type Creds interface {

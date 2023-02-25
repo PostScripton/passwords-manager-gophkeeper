@@ -22,8 +22,8 @@ type Settings interface {
 
 type CredsSecrets interface {
 	Create(ctx context.Context, userID int, website, login, encPassword, additionalData string) error
-	GetById(ctx context.Context, id int64) (*models.CredsSecret, error)
-	Delete(ctx context.Context, id int64) error
+	GetById(ctx context.Context, uid int64) (*models.CredsSecret, error)
+	Delete(ctx context.Context, uid int64) error
 	GetList(ctx context.Context, userID int) ([]*models.CredsSecret, error)
 	SetList(ctx context.Context, list []models.CredsSecret) error
 	Truncate(ctx context.Context) error
@@ -37,7 +37,7 @@ type Repository struct {
 
 func NewRepository(factory Factory) *Repository {
 	return &Repository{
-		Users:        factory.CreateUserRepository(),
+		Users:        factory.CreateUsersRepository(),
 		Settings:     factory.CreateSettingsRepository(),
 		CredsSecrets: factory.CreateCredsSecretsRepository(),
 	}

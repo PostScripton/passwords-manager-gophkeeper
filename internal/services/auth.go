@@ -27,14 +27,6 @@ func NewAuthService(repo repository.Users, secret string) Auth {
 	}
 }
 
-func (s *authService) GetSecret() string {
-	return s.secret
-}
-
-func (s *authService) LoginByUser(user *models.User) (string, error) {
-	return s.generateJWT(user)
-}
-
 func (s *authService) Login(ctx context.Context, login, password string) (string, error) {
 	user, err := s.userRepo.FindByLogin(ctx, login)
 	if err != nil {
@@ -48,7 +40,22 @@ func (s *authService) Login(ctx context.Context, login, password string) (string
 		return "", ErrCredentials
 	}
 
-	return s.generateJWT(user)
+	return s.GenerateJWT(user)
+}
+
+func (s *authService) GenerateJWT(user *models.User) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"exp": time.Now().Add(24 * 60 * time.Minute).Unix(),
+		"iat": time.Now().Unix(),
+		"sub": user.ID,
+	})
+
+	tokenString, err := token.SignedString([]byte(s.secret))
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
 }
 
 func (s *authService) ParseJWT(tokenString string) (*jwt.Token, error) {
@@ -70,20 +77,13 @@ func (s *authService) GetIDFromJWT(token *jwt.Token) (int, error) {
 	}
 }
 
-func (s *authService) generateJWT(user *models.User) (string, error) {
-	token := jwt.New(jwt.SigningMethodHS256)
-
-	claims := token.Claims.(jwt.MapClaims)
-	claims["exp"] = time.Now().Add(24 * 60 * time.Minute).Unix()
-	claims["iat"] = time.Now().Unix()
-	claims["sub"] = user.ID
-
-	tokenString, err := token.SignedString([]byte(s.secret))
+func (s *authService) HashPassword(password string) (string, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 8)
 	if err != nil {
 		return "", err
 	}
 
-	return tokenString, nil
+	return string(hashedPassword), nil
 }
 
 func (s *authService) checkPassword(hashedPassword, providedPassword string) error {

@@ -29,16 +29,13 @@ func (r *CredsSecretsRepository) Create(
 	userID int,
 	website, login, encPassword, additionalData string,
 ) error {
-	exists, err := r.checkCredsSecretExists(userID, website, login)
-	if err != nil {
-		return err
-	}
-	if exists {
+	if r.checkCredsSecretExists(userID, website, login) {
 		return fmt.Errorf("credentials for this website exist")
 	}
 
 	credsSecret := models.CredsSecret{
 		ID:             rand.Int63(),
+		UID:            rand.Int63(),
 		Website:        website,
 		Login:          login,
 		Password:       encPassword,
@@ -49,25 +46,25 @@ func (r *CredsSecretsRepository) Create(
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	r.storage[credsSecret.ID] = credsSecret
+	r.storage[credsSecret.UID] = credsSecret
 
 	return nil
 }
 
-func (r *CredsSecretsRepository) GetById(_ context.Context, id int64) (*models.CredsSecret, error) {
+func (r *CredsSecretsRepository) GetById(_ context.Context, uid int64) (*models.CredsSecret, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	creds, ok := r.storage[id]
+	creds, ok := r.storage[uid]
 	if !ok {
-		return nil, fmt.Errorf("creds with such id [%d] is not found", id)
+		return nil, fmt.Errorf("creds with such uid [%d] is not found", uid)
 	}
 
 	return &creds, nil
 }
 
-func (r *CredsSecretsRepository) Delete(_ context.Context, id int64) error {
-	delete(r.storage, id)
+func (r *CredsSecretsRepository) Delete(_ context.Context, uid int64) error {
+	delete(r.storage, uid)
 
 	return nil
 }
@@ -80,7 +77,8 @@ func (r *CredsSecretsRepository) GetList(_ context.Context, userID int) ([]*mode
 
 	for _, secret := range r.storage {
 		if secret.UserID == userID {
-			list = append(list, &secret)
+			s := secret
+			list = append(list, &s)
 		}
 	}
 
@@ -100,8 +98,8 @@ func (r *CredsSecretsRepository) SetList(_ context.Context, list []models.CredsS
 	defer r.mu.Unlock()
 
 	for _, secret := range list {
-		delete(r.storage, secret.ID)
-		r.storage[secret.ID] = secret
+		delete(r.storage, secret.UID)
+		r.storage[secret.UID] = secret
 	}
 
 	return nil
@@ -116,12 +114,12 @@ func (r *CredsSecretsRepository) Truncate(_ context.Context) error {
 	return nil
 }
 
-func (r *CredsSecretsRepository) checkCredsSecretExists(userID int, website, login string) (bool, error) {
+func (r *CredsSecretsRepository) checkCredsSecretExists(userID int, website, login string) bool {
 	for _, secret := range r.storage {
 		if secret.UserID == userID && secret.Website == website && secret.Login == login {
-			return true, nil
+			return true
 		}
 	}
 
-	return false, nil
+	return false
 }

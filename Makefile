@@ -17,3 +17,6 @@ proto:
 
 cert-gen:
 	cd ./cert; sh gen.sh
+
+mocks:
+	mockgen -source=./internal/repository/repository.go -destination ./internal/repository/mocks/mock.go
