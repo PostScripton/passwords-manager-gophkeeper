@@ -10,7 +10,7 @@ func NewFactory() repository.Factory {
 	return &Factory{}
 }
 
-func (f *Factory) CreateUserRepository() repository.Users {
+func (f *Factory) CreateUsersRepository() repository.Users {
 	return NewUsersRepository()
 }
 

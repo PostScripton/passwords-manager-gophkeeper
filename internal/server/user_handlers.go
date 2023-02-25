@@ -21,7 +21,13 @@ type UserServer struct {
 var _ pb.UserServer = (*UserServer)(nil)
 
 func (u *UserServer) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.AuthResponse, error) {
-	user, err := u.services.User.Create(ctx, in.Login, in.Password, in.AesSecret, in.PrivateKey)
+	hashedPassword, err := u.services.Auth.HashPassword(in.Password)
+	if err != nil {
+		log.Error().Err(err).Str("password", in.Password).Msg("Hashing password")
+		return nil, errInternalServerError
+	}
+
+	user, err := u.services.User.Create(ctx, in.Login, hashedPassword, in.AesSecret, in.PrivateKey)
 	if err != nil {
 		if errors.Is(err, repository.ErrLoginTaken) {
 			return nil, status.Error(codes.Unauthenticated, err.Error())
@@ -31,7 +37,7 @@ func (u *UserServer) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.
 		return nil, errInternalServerError
 	}
 
-	token, err := u.services.Auth.LoginByUser(user)
+	token, err := u.services.Auth.GenerateJWT(user)
 	if err != nil {
 		log.Error().Err(err).Int("user-id", user.ID).Msg("Authorizing user")
 		return nil, errInternalServerError

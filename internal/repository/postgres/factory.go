@@ -14,7 +14,7 @@ func NewFactory(db *Postgres) repository.Factory {
 	}
 }
 
-func (f *Factory) CreateUserRepository() repository.Users {
+func (f *Factory) CreateUsersRepository() repository.Users {
 	return NewUsersRepository(f.db)
 }
 
